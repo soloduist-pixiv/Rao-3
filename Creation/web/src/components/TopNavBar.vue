@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
   username: {
     type: String,
@@ -19,10 +21,11 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['logout'])
+const isSolid = computed(() => props.navAlpha >= 0.28)
 </script>
 
 <template>
-  <header class="top-nav" :style="{ '--nav-alpha': navAlpha }">
+  <header class="top-nav" :class="{ 'top-nav--solid': isSolid }">
     <div class="top-nav__inner">
       <div class="brand-group">
         <div class="brand-dot"></div>
@@ -51,7 +54,7 @@ const emit = defineEmits(['logout'])
           </span>
         </transition>
 
-        <button v-if="isLoggedIn" class="ghost-btn" type="button" @click="emit('logout')">登出</button>
+        <button v-if="isLoggedIn" class="ui-button ui-button--ghost" type="button" @click="emit('logout')">登出</button>
       </div>
     </div>
   </header>

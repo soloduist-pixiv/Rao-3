@@ -19,8 +19,12 @@ const analysisResult = ref(null)
 
 const activeTab = ref('report')
 const scrollY = ref(0)
+const theme = ref('light')
+const showDemoModal = ref(false)
+const toastList = ref([])
 
 const navAlpha = computed(() => Math.min(0.42, 0.16 + scrollY.value / 900))
+const toastPreview = computed(() => toastList.value.slice(0, 3))
 
 function switchMode(mode) {
   authMode.value = mode
@@ -44,6 +48,7 @@ function onLoginSuccess(payload) {
 function onRegistered() {
   authMode.value = 'login'
   authNotice.value = '注册成功，请登录'
+  pushToast('注册成功，已切换到登录页', 'success')
 }
 
 function logout() {
@@ -60,13 +65,29 @@ function logout() {
 function onReportAnalyzed(payload) {
   analysisResult.value = payload?.analysis || null
   activeTab.value = 'analysis'
+  pushToast('问卷分析完成，已切换到分析结果', 'success')
 }
 
 function handleScroll() {
   scrollY.value = window.scrollY || 0
 }
 
+function toggleTheme() {
+  theme.value = theme.value === 'light' ? 'dark' : 'light'
+  document.documentElement.setAttribute('data-theme', theme.value)
+  pushToast(theme.value === 'light' ? '已切换为浅色主题' : '已切换为暗色主题', 'success')
+}
+
+function pushToast(text, type = 'success') {
+  const id = Date.now() + Math.random()
+  toastList.value.unshift({ id, text, type })
+  window.setTimeout(() => {
+    toastList.value = toastList.value.filter((item) => item.id !== id)
+  }, 2600)
+}
+
 onMounted(() => {
+  document.documentElement.setAttribute('data-theme', theme.value)
   handleScroll()
   window.addEventListener('scroll', handleScroll, { passive: true })
 })
@@ -78,509 +99,135 @@ onUnmounted(() => {
 
 <template>
   <div class="app-shell">
-    <TopNavBar
-      :username="username"
-      :is-logged-in="isLoggedIn"
-      :is-member="isMember"
-      :nav-alpha="navAlpha"
-      @logout="logout"
-    />
+    <aside class="ui-nav-rail">
+      <div class="ui-nav-icon is-active">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12L12 4L20 12V20H4V12Z" stroke="currentColor" stroke-width="1.8"/></svg>
+      </div>
+      <div class="ui-nav-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 7H19M5 12H19M5 17H14" stroke="currentColor" stroke-width="1.8"/></svg>
+      </div>
+      <div class="ui-nav-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 19V5H20V19H4Z" stroke="currentColor" stroke-width="1.8"/></svg>
+      </div>
+      <div class="ui-nav-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M12 5V19" stroke="currentColor" stroke-width="1.8"/></svg>
+      </div>
+      <div class="ui-nav-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 4L4 8L12 12L20 8L12 4ZM4 12L12 16L20 12M4 16L12 20L20 16" stroke="currentColor" stroke-width="1.8"/></svg>
+      </div>
+      <button class="ui-button ui-button--ghost" type="button" @click="toggleTheme">
+        {{ theme === 'light' ? '暗色' : '浅色' }}
+      </button>
+    </aside>
 
-    <div class="bg-orb orb-a" :style="{ transform: `translate3d(0, ${scrollY * 0.14}px, 0)` }"></div>
-    <div class="bg-orb orb-b" :style="{ transform: `translate3d(0, ${scrollY * -0.08}px, 0)` }"></div>
+    <div class="workspace">
+      <TopNavBar
+        :username="username"
+        :is-logged-in="isLoggedIn"
+        :is-member="isMember"
+        :nav-alpha="navAlpha"
+        @logout="logout"
+      />
 
-    <section class="hero glass-card">
-      <h1>大学生创业指导平台</h1>
-      <p>从账号接入到问卷采集，构建更有引导性的创业决策体验</p>
-    </section>
-
-    <main v-if="!isLoggedIn" class="auth-layout">
-      <section class="glass-card auth-card">
-        <div class="auth-switch">
-          <button :class="{ active: authMode === 'login' }" @click="switchMode('login')">登录</button>
-          <button :class="{ active: authMode === 'register' }" @click="switchMode('register')">注册</button>
-        </div>
-
-        <transition name="fade-slide" mode="out-in">
-          <LoginForm v-if="authMode === 'login'" key="login" :api-base="apiBase" @success="onLoginSuccess" />
-          <RegisterForm v-else key="register" :api-base="apiBase" @registered="onRegistered" />
-        </transition>
-        <p v-if="authNotice" class="message success">{{ authNotice }}</p>
-      </section>
-    </main>
-
-    <main v-else class="dashboard-bento">
-      <section class="glass-card module-2x1">
-        <div class="tabs">
-          <button :class="{ active: activeTab === 'report' }" @click="activeTab = 'report'">诊断报告</button>
-          <button :class="{ active: activeTab === 'analysis' }" :disabled="!analysisResult" @click="activeTab = 'analysis'">
-            分析结果
-          </button>
-          <button :class="{ active: activeTab === 'coming' }" @click="activeTab = 'coming'">创业路径（待开放）</button>
-        </div>
-        <p class="token-tip">当前账号：{{ username }}</p>
+      <section class="hero">
+        <h1>大学生创业指导平台</h1>
+        <p>从账号接入到问卷采集，构建更有引导性的创业决策体验</p>
       </section>
 
-      <section class="glass-card module-2x2 panel-card">
-        <transition name="fade-slide" mode="out-in">
-          <ReportForm
-            v-if="activeTab === 'report'"
-            key="report"
-            :api-base="apiBase"
-            :access-token="accessToken"
-            @analyzed="onReportAnalyzed"
-          />
-          <AnalysisFrom v-else-if="activeTab === 'analysis'" key="analysis" :analysis="analysisResult" />
-          <section v-else key="coming" class="coming-wrap">
-            <h2>创业路径</h2>
-            <p>该模块后续开放，当前请先填写“诊断报告”问卷。</p>
+      <main v-if="!isLoggedIn" class="auth-layout">
+        <section class="ui-card auth-card">
+          <div class="ui-tabs">
+            <button class="ui-tabs__item" :class="{ 'is-active': authMode === 'login' }" @click="switchMode('login')">登录</button>
+            <button class="ui-tabs__item" :class="{ 'is-active': authMode === 'register' }" @click="switchMode('register')">注册</button>
+          </div>
+          <transition name="fade-slide" mode="out-in">
+            <LoginForm v-if="authMode === 'login'" key="login" :api-base="apiBase" @success="onLoginSuccess" />
+            <RegisterForm v-else key="register" :api-base="apiBase" @registered="onRegistered" />
+          </transition>
+          <p v-if="authNotice" class="message success">{{ authNotice }}</p>
+        </section>
+      </main>
+
+      <main v-else class="dashboard-bento">
+        <div class="panel-column">
+          <section class="ui-card module-card">
+            <div class="ui-tabs">
+              <button class="ui-tabs__item" :class="{ 'is-active': activeTab === 'report' }" @click="activeTab = 'report'">诊断报告</button>
+              <button
+                class="ui-tabs__item"
+                :class="{ 'is-active': activeTab === 'analysis' }"
+                :disabled="!analysisResult"
+                @click="activeTab = 'analysis'"
+              >
+                分析结果
+              </button>
+              <button class="ui-tabs__item" :class="{ 'is-active': activeTab === 'coming' }" @click="activeTab = 'coming'">创业路径</button>
+            </div>
+            <p class="token-tip">当前账号：{{ username }}</p>
           </section>
-        </transition>
-      </section>
 
-    </main>
+          <section class="ui-card module-card">
+            <transition name="fade-slide" mode="out-in">
+              <ReportForm
+                v-if="activeTab === 'report'"
+                key="report"
+                :api-base="apiBase"
+                :access-token="accessToken"
+                @analyzed="onReportAnalyzed"
+              />
+              <AnalysisFrom v-else-if="activeTab === 'analysis'" key="analysis" :analysis="analysisResult" />
+              <section v-else key="coming" class="coming-wrap">
+                <h2>创业路径</h2>
+                <p>该模块后续开放，当前请先填写“诊断报告”问卷。</p>
+                <button class="ui-button ui-button--primary" type="button" @click="showDemoModal = true">查看演示弹窗</button>
+              </section>
+            </transition>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <transition name="fade-slide">
+      <section v-if="showDemoModal" class="ui-modal-mask" @click.self="showDemoModal = false">
+        <article class="ui-modal">
+          <header class="ui-modal__head">
+            <strong>组件演示区</strong>
+          </header>
+          <div class="ui-modal__body">
+            <section class="showcase-grid">
+              <div class="ui-card ui-card__body">
+                <p>Button</p>
+                <div class="showcase-actions">
+                  <button class="ui-button ui-button--primary" type="button">Primary</button>
+                  <button class="ui-button ui-button--ghost" type="button">Ghost</button>
+                  <button class="ui-button ui-button--accent" type="button">Accent</button>
+                </div>
+              </div>
+              <div class="ui-card ui-card__body">
+                <p>Input + Tab + Toast</p>
+                <input class="ui-input" type="text" placeholder="输入关键词" />
+                <div class="ui-tabs showcase-tabs">
+                  <button class="ui-tabs__item is-active" type="button">Overview</button>
+                  <button class="ui-tabs__item" type="button">Detail</button>
+                </div>
+                <button class="ui-button ui-button--ghost showcase-toast-btn" type="button" @click="pushToast('这是一个 Toast 示例', 'success')">触发 Toast</button>
+              </div>
+            </section>
+          </div>
+          <footer class="ui-modal__foot">
+            <button class="ui-button ui-button--ghost" type="button" @click="showDemoModal = false">关闭</button>
+            <button class="ui-button ui-button--primary" type="button" @click="showDemoModal = false">确认</button>
+          </footer>
+        </article>
+      </section>
+    </transition>
+
+    <div class="ui-toast-stack">
+      <transition-group name="toast-fade">
+        <article v-for="item in toastPreview" :key="item.id" class="ui-toast" :class="item.type === 'success' ? 'ui-toast--success' : ''">
+          {{ item.text }}
+        </article>
+      </transition-group>
+    </div>
   </div>
 </template>
-
-<style>
-:root {
-  color-scheme: light;
-}
-
-body {
-  margin: 0;
-  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
-  color: #eef2ff;
-  background: radial-gradient(circle at 20% 20%, #4f46e5 0%, #1f2a68 35%, #0b1026 100%);
-}
-
-* {
-  box-sizing: border-box;
-}
-
-.app-shell {
-  min-height: 100vh;
-  padding: 96px 20px 24px;
-  color: #e5edff;
-  position: relative;
-  overflow: hidden;
-}
-
-.bg-orb {
-  position: fixed;
-  border-radius: 999px;
-  filter: blur(40px);
-  pointer-events: none;
-  z-index: 0;
-  transition: transform 0.25s linear;
-}
-
-.orb-a {
-  width: 360px;
-  height: 360px;
-  right: -80px;
-  top: 120px;
-  background: rgba(96, 165, 250, 0.34);
-}
-
-.orb-b {
-  width: 300px;
-  height: 300px;
-  left: -120px;
-  top: 460px;
-  background: rgba(129, 140, 248, 0.28);
-}
-
-.top-nav {
-  position: fixed;
-  top: 12px;
-  left: 12px;
-  right: 12px;
-  z-index: 20;
-  border-radius: 18px;
-  background: rgba(13, 23, 56, var(--nav-alpha, 0.2));
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 14px 38px rgba(3, 8, 25, 0.32);
-  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.top-nav__inner {
-  min-height: 60px;
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-}
-
-.brand-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.brand-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
-  background: linear-gradient(130deg, #38bdf8, #6366f1);
-  box-shadow: 0 0 0 5px rgba(56, 189, 248, 0.18);
-}
-
-.brand-text {
-  display: grid;
-  gap: 2px;
-}
-
-.brand-text strong {
-  font-size: clamp(0.95rem, 0.88rem + 0.3vw, 1.05rem);
-  letter-spacing: 0.01em;
-}
-
-.brand-text span {
-  font-size: 0.75rem;
-  color: rgba(219, 234, 254, 0.78);
-}
-
-.user-panel {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.username {
-  max-width: clamp(110px, 16vw, 220px);
-  padding: 6px 10px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  font-size: 0.88rem;
-}
-
-.member-pill {
-  min-width: 78px;
-  justify-content: center;
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.member-pill--on {
-  color: #fde68a;
-  background: rgba(250, 204, 21, 0.18);
-  border: 1px solid rgba(250, 204, 21, 0.38);
-}
-
-.member-pill--off {
-  color: #bfdbfe;
-  background: rgba(59, 130, 246, 0.16);
-  border: 1px solid rgba(96, 165, 250, 0.36);
-}
-
-.status-pill {
-  min-width: 66px;
-  justify-content: center;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.status-pill i {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-}
-
-.status-pill--on {
-  color: #86efac;
-  background: rgba(34, 197, 94, 0.15);
-  border: 1px solid rgba(34, 197, 94, 0.35);
-}
-
-.status-pill--on i {
-  background: #4ade80;
-}
-
-.status-pill--off {
-  color: #fca5a5;
-  background: rgba(248, 113, 113, 0.14);
-  border: 1px solid rgba(248, 113, 113, 0.34);
-}
-
-.status-pill--off i {
-  background: #f87171;
-}
-
-.hero {
-  max-width: 1200px;
-  margin: 0 auto 16px;
-  position: relative;
-  z-index: 1;
-}
-
-.hero h1 {
-  margin: 0 0 8px;
-  font-size: clamp(1.55rem, 1.2rem + 1.2vw, 2.25rem);
-  font-weight: 700;
-}
-
-.hero p {
-  margin: 0;
-  font-size: clamp(0.95rem, 0.86rem + 0.4vw, 1.05rem);
-  color: rgba(219, 234, 254, 0.88);
-}
-
-.glass-card {
-  background: rgba(255, 255, 255, 0.18);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 18px;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 18px 44px rgba(5, 10, 28, 0.3);
-}
-
-.auth-layout {
-  position: relative;
-  z-index: 1;
-  max-width: 760px;
-  margin: 0 auto;
-  display: block;
-}
-
-.auth-card {
-  padding: 20px;
-}
-
-.auth-switch {
-  display: inline-flex;
-  gap: 10px;
-  padding: 5px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.12);
-  margin-bottom: 16px;
-}
-
-.auth-switch button,
-.tabs button,
-.primary-btn,
-.ghost-btn {
-  min-height: 44px;
-  padding: 10px 16px;
-  border-radius: 12px;
-  border: 1px solid transparent;
-  font-size: 0.92rem;
-  cursor: pointer;
-  transition: transform 0.24s ease, opacity 0.24s ease, box-shadow 0.24s ease, background 0.24s ease;
-}
-
-.auth-switch button,
-.tabs button {
-  background: rgba(226, 232, 255, 0.2);
-  color: #eff6ff;
-}
-
-.auth-switch button:hover,
-.tabs button:hover,
-.ghost-btn:hover,
-.primary-btn:hover {
-  transform: translateY(-1px);
-}
-
-.auth-switch button.active,
-.tabs button.active {
-  background: linear-gradient(130deg, rgba(59, 130, 246, 0.92), rgba(99, 102, 241, 0.92));
-  color: #ffffff;
-  box-shadow: 0 10px 24px rgba(59, 130, 246, 0.4);
-}
-
-.auth-panel__head h2 {
-  margin: 0;
-  font-size: clamp(1.08rem, 0.95rem + 0.5vw, 1.3rem);
-}
-
-.auth-panel__head p {
-  margin: 6px 0 14px;
-  color: rgba(226, 232, 255, 0.85);
-  font-size: 0.9rem;
-}
-
-.auth-form {
-  display: grid;
-  gap: 14px;
-}
-
-label {
-  display: grid;
-  gap: 6px;
-  font-size: 0.9rem;
-  color: rgba(224, 231, 255, 0.95);
-}
-
-input,
-select {
-  width: 100%;
-  min-height: 44px;
-  border: 1px solid rgba(165, 180, 252, 0.4);
-  border-radius: 12px;
-  padding: 0 12px;
-  background: rgba(15, 23, 53, 0.28);
-  color: #f8fafc;
-  outline: none;
-}
-
-input::placeholder {
-  color: rgba(226, 232, 240, 0.58);
-}
-
-input:focus,
-select:focus {
-  border-color: rgba(99, 102, 241, 0.9);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-}
-
-.primary-btn {
-  border: none;
-  background: linear-gradient(130deg, #3b82f6, #6366f1);
-  color: #fff;
-  font-weight: 700;
-}
-
-.primary-btn:disabled {
-  opacity: 0.74;
-  cursor: not-allowed;
-}
-
-.ghost-btn {
-  background: rgba(15, 23, 53, 0.35);
-  border-color: rgba(191, 219, 254, 0.36);
-  color: #dbeafe;
-}
-
-.dashboard-bento {
-  position: relative;
-  z-index: 1;
-  max-width: 1200px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.module-2x1 {
-  grid-column: span 8;
-  padding: 16px;
-}
-
-.module-2x2 {
-  grid-column: span 8;
-  padding: 16px;
-}
-
-.panel-card {
-  min-height: 520px;
-}
-
-.tabs {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.token-tip {
-  margin: 0;
-  font-size: 0.84rem;
-  color: rgba(224, 231, 255, 0.88);
-}
-
-.coming-wrap h2 {
-  margin: 0 0 10px;
-  font-size: clamp(1.12rem, 1rem + 0.5vw, 1.35rem);
-}
-
-.coming-wrap p {
-  margin: 0;
-  line-height: 1.6;
-  color: rgba(224, 231, 255, 0.88);
-}
-
-.message {
-  margin: 14px 0 0;
-  font-size: 0.9rem;
-}
-
-.success {
-  color: #86efac;
-}
-
-.error {
-  color: #fca5a5;
-}
-
-.fade-slide-enter-active,
-.fade-slide-leave-active,
-.status-fade-enter-active,
-.status-fade-leave-active {
-  transition: opacity 0.24s ease, transform 0.24s ease;
-}
-
-.fade-slide-enter-from,
-.fade-slide-leave-to,
-.status-fade-enter-from,
-.status-fade-leave-to {
-  opacity: 0;
-  transform: translateY(4px);
-}
-
-@media (max-width: 1024px) {
-  .module-2x1,
-  .module-2x2 {
-    grid-column: span 12;
-  }
-}
-
-@media (max-width: 720px) {
-  .app-shell {
-    padding: 86px 12px 16px;
-  }
-
-  .top-nav {
-    top: 8px;
-    left: 8px;
-    right: 8px;
-    border-radius: 14px;
-  }
-
-  .top-nav__inner {
-    min-height: 56px;
-    padding: 8px 10px;
-  }
-
-  .brand-text span {
-    display: none;
-  }
-
-  .username {
-    max-width: 110px;
-  }
-
-  .hero,
-  .auth-layout,
-  .dashboard-bento {
-    gap: 12px;
-  }
-}
-</style>

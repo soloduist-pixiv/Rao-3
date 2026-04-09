@@ -1,0 +1,43 @@
+color:
+  bg: "#f3f4f6"
+  surface: "#fffcf5"
+  surface2: "#ffffff"
+  card: "#f6f3eb"
+  cardDark: "#121826"
+  text: "#131722"
+  textSoft: "#596074"
+  border: "#e9e6de"
+  primary: "#131826"
+  primaryContrast: "#ffffff"
+  accent: "#ffb21f"
+  accent2: "#ff6a3d"
+  success: "#7cbf7a"
+font:
+  familySans: "Inter, Microsoft YaHei, PingFang SC, sans-serif"
+  lineTight: 1.2
+  lineBody: 1.6
+radius:
+  xs: 8
+  sm: 12
+  md: 16
+  lg: 24
+  xl: 32
+shadow:
+  soft: "0 12px 30px rgba(18, 20, 26, 0.08)"
+  card: "0 16px 36px rgba(18, 20, 26, 0.1)"
+  float: "0 20px 42px rgba(18, 20, 26, 0.16)"
+spacing:
+  unit: 8
+  "1": 8
+  "2": 16
+  "3": 24
+  "4": 32
+  "5": 40
+zIndex:
+  nav: 40
+  modal: 80
+  toast: 90
+motion:
+  durationFast: 160
+  durationBase: 220
+  easingStandard: "cubic-bezier(0.22, 1, 0.36, 1)"

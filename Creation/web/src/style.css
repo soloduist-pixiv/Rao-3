@@ -1,4 +1,9 @@
-body {
-  margin: 0;
-  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
-}
+@import './styles/tokens.css';
+@import './styles/theme.css';
+@import './styles/components.css';
+@import './styles/layout.css';
+@import './styles/motion.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

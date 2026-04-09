@@ -39,6 +39,7 @@ const scoreRows = computed(() => {
 
 const totalScore = computed(() => props.analysis?.total_score ?? 0)
 const overallComment = computed(() => props.analysis?.overall_comment || '暂无结果')
+const scoreValue = computed(() => Math.max(0, Math.min(100, Number(totalScore.value) || 0)))
 
 const radarSize = 360
 const radarCenter = radarSize / 2
@@ -217,8 +218,12 @@ const curveChart = computed(() => {
     <section class="summary-grid">
       <article class="bento-card score-card">
         <h3>综合得分</h3>
-        <strong>{{ totalScore }}</strong>
-        <p>满分 100</p>
+        <div class="score-bars">
+          <p>具体分值 {{ scoreValue }}</p>
+          <progress class="score-progress score-progress--actual" :value="scoreValue" max="100"></progress>
+          <p>满分 100</p>
+          <progress class="score-progress score-progress--full" value="100" max="100"></progress>
+        </div>
       </article>
       <article class="bento-card summary-card">
         <h3>综合结论</h3>
@@ -412,193 +417,3 @@ const curveChart = computed(() => {
     </section>
   </section>
 </template>
-
-<style scoped>
-.analysis-wrap {
-  width: 100%;
-}
-
-.analysis-wrap h2 {
-  margin: 0 0 20px;
-  font-size: clamp(1.25rem, 1.05rem + 0.9vw, 1.75rem);
-}
-
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.chart-grid {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.field-grid {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.bento-card {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.34);
-  border-radius: 16px;
-  padding: 16px;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 12px 34px rgba(35, 55, 94, 0.12);
-}
-
-.score-card {
-  grid-column: span 4;
-}
-
-.summary-card {
-  grid-column: span 8;
-}
-
-.radar-card {
-  grid-column: span 5;
-}
-
-.line-card {
-  grid-column: span 7;
-}
-
-.score-card strong {
-  display: block;
-  font-size: 2rem;
-  margin: 8px 0;
-  color: #ecfeff;
-}
-
-.score-card p,
-.summary-card p,
-.row-card p {
-  margin: 0;
-  color: rgba(226, 232, 240, 0.92);
-}
-
-.radar-svg,
-.line-svg {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.radar-label {
-  fill: rgba(241, 245, 249, 0.9);
-  font-size: 11px;
-}
-
-.axis-label {
-  fill: rgba(226, 232, 240, 0.86);
-  font-size: 11px;
-}
-
-.axis-title {
-  fill: rgba(226, 232, 240, 0.95);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.payback-label {
-  fill: #ffe4e6;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.legend-row {
-  margin-top: 10px;
-  display: flex;
-  gap: 18px;
-  color: rgba(226, 232, 240, 0.92);
-  font-size: 0.86rem;
-}
-
-.legend-row span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.legend-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  display: inline-block;
-}
-
-.legend-dot--cost {
-  background: #f59e0b;
-}
-
-.legend-dot--profit {
-  background: #22c55e;
-}
-
-.legend-dot--payback {
-  background: #f43f5e;
-}
-
-.empty-tip {
-  margin: 10px 0 0;
-  color: rgba(226, 232, 240, 0.85);
-}
-
-.payback-tip {
-  margin: 10px 0 0;
-  color: rgba(254, 226, 226, 0.95);
-  font-size: 0.86rem;
-}
-
-.payback-tip--pending {
-  color: rgba(226, 232, 240, 0.92);
-}
-
-.row-card {
-  grid-column: span 4;
-}
-
-.row-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.row-title strong {
-  color: #a5f3fc;
-}
-
-@media (max-width: 992px) {
-  .score-card,
-  .summary-card,
-  .radar-card,
-  .line-card,
-  .row-card {
-    grid-column: span 6;
-  }
-}
-
-@media (max-width: 640px) {
-  .summary-grid,
-  .chart-grid,
-  .field-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .score-card,
-  .summary-card,
-  .radar-card,
-  .line-card,
-  .row-card {
-    grid-column: span 1;
-  }
-}
-</style>

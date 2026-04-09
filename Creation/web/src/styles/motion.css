@@ -1,0 +1,29 @@
+.fade-slide-enter-active,
+.fade-slide-leave-active,
+.status-fade-enter-active,
+.status-fade-leave-active,
+.toast-fade-enter-active,
+.toast-fade-leave-active {
+  transition: opacity var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard);
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to,
+.status-fade-enter-from,
+.status-fade-leave-to,
+.toast-fade-enter-from,
+.toast-fade-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

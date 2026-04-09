@@ -61,7 +61,7 @@ async function submit() {
     form.password = ''
     form.confirmPassword = ''
     emit('registered')
-  } catch (e) {
+  } catch {
     error.value = '无法连接后端服务，请检查后端是否已启动'
   } finally {
     isSubmitting.value = false
@@ -77,22 +77,22 @@ async function submit() {
     </header>
 
     <form class="auth-form" @submit.prevent="submit">
-      <label>
+      <label class="ui-label">
         用户名
-        <input v-model="form.username" type="text" placeholder="请输入用户名" @input="resetMessage" />
+        <input v-model="form.username" class="ui-input" type="text" placeholder="请输入用户名" @input="resetMessage" />
       </label>
 
-      <label>
+      <label class="ui-label">
         密码
-        <input v-model="form.password" type="password" placeholder="请输入密码" @input="resetMessage" />
+        <input v-model="form.password" class="ui-input" type="password" placeholder="请输入密码" @input="resetMessage" />
       </label>
 
-      <label>
+      <label class="ui-label">
         重复密码
-        <input v-model="form.confirmPassword" type="password" placeholder="请再次输入密码" @input="resetMessage" />
+        <input v-model="form.confirmPassword" class="ui-input" type="password" placeholder="请再次输入密码" @input="resetMessage" />
       </label>
 
-      <button class="primary-btn" :disabled="isSubmitting" type="submit">
+      <button class="ui-button ui-button--primary" :disabled="isSubmitting" type="submit">
         {{ isSubmitting ? '提交中...' : '立即注册' }}
       </button>
     </form>
